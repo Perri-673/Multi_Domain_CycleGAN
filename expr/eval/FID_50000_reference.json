@@ -1,0 +1,9 @@
+{
+    "FID_reference/t12flair": 51.33848824651692,
+    "FID_reference/t22flair": 48.48771860911497,
+    "FID_reference/flair2t1": 32.384667873334074,
+    "FID_reference/t22t1": 36.31732486816778,
+    "FID_reference/flair2t2": 25.187201874281374,
+    "FID_reference/t12t2": 29.226308110348878,
+    "FID_reference/mean": 37.15695159696067
+}

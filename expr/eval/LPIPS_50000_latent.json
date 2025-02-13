@@ -1,0 +1,9 @@
+{
+    "LPIPS_latent/t12flair": 0.0852302990176461,
+    "LPIPS_latent/t22flair": 0.08061207559975711,
+    "LPIPS_latent/flair2t1": 0.07379087670282884,
+    "LPIPS_latent/t22t1": 0.0803807560693134,
+    "LPIPS_latent/flair2t2": 0.06100411476059393,
+    "LPIPS_latent/t12t2": 0.06767488880590959,
+    "LPIPS_latent/mean": 0.07478216849267484
+}

@@ -1,0 +1,9 @@
+{
+    "LPIPS_reference/t12flair": 0.055709469724785195,
+    "LPIPS_reference/t22flair": 0.050056892362507904,
+    "LPIPS_reference/flair2t1": 0.045153718780387535,
+    "LPIPS_reference/t22t1": 0.04905336248603734,
+    "LPIPS_reference/flair2t2": 0.03148995830931447,
+    "LPIPS_reference/t12t2": 0.03643359210003506,
+    "LPIPS_reference/mean": 0.04464949896051125
+}

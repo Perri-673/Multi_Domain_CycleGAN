@@ -1,0 +1,9 @@
+{
+    "FID_latent/t12flair": 47.03499756640295,
+    "FID_latent/t22flair": 47.520602958913415,
+    "FID_latent/flair2t1": 33.317274470467915,
+    "FID_latent/t22t1": 31.810605741370793,
+    "FID_latent/flair2t2": 20.885895617089375,
+    "FID_latent/t12t2": 24.425840233812274,
+    "FID_latent/mean": 34.165869431342784
+}
