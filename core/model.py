@@ -15,7 +15,7 @@ class SpatialAttention(nn.Module):
         dim_out = dim_in if dim_out is None else dim_out  
         self.query_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
         self.key_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
-        self.value_conv = nn.Conv2d(dim_in, dim_in, kernel_size=3, padding=1)  # Adjusted dim_out to dim_in  
+        self.value_conv = nn.Conv2d(dim_in, dim_out, kernel_size=3, padding=1)  # Adjusted dim_out to dim_in  
         self.gamma = nn.Parameter(torch.zeros(1))  
         
     def forward(self, x):  
