@@ -15,14 +15,14 @@ class SpatialAttention(nn.Module):
         dim_out = dim_in if dim_out is None else dim_out  
         self.query_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
         self.key_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
-        self.value_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  # Adjusted dim_out  
+        self.value_conv = nn.Conv2d(dim_in, dim_in, kernel_size=3, padding=1)  # Adjusted dim_out to dim_in  
         self.gamma = nn.Parameter(torch.zeros(1))  
         
     def forward(self, x):  
         B, C, H, W = x.size()  
         proj_query = self.query_conv(x).view(B, -1, H*W).permute(0, 2, 1)  # B, HW, C//4  
         proj_key = self.key_conv(x).view(B, -1, H*W)  # B, C//4, HW  
-        proj_value = self.value_conv(x).view(B, -1, H*W)  # B, C//4, HW  # Adjusted dimensions
+        proj_value = self.value_conv(x).view(B, -1, H*W)  # B, C, HW  # Adjusted dimensions
         
         attention = torch.matmul(proj_query, proj_key)  # B, HW, HW  
         attention = attention / math.sqrt(proj_key.size(-1))  
