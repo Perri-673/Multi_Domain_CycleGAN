@@ -9,6 +9,45 @@ import torch.nn.functional as F
 
 from core.wing import FAN
 
+class SpatialAttention(nn.Module):  
+    def __init__(self, dim_in, dim_out=None):  
+        super().__init__()  
+        dim_out = dim_in if dim_out is None else dim_out  
+        self.query_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
+        self.key_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
+        self.value_conv = nn.Conv2d(dim_in, dim_out, kernel_size=3, padding=1)  
+        self.gamma = nn.Parameter(torch.zeros(1))  
+        
+    def forward(self, x):  
+        B, C, H, W = x.size()  
+        proj_query = self.query_conv(x).view(B, -1, H*W).permute(0, 2, 1)  # B, HW, C//4  
+        proj_key = self.key_conv(x).view(B, -1, H*W)  # B, C//4, HW  
+        proj_value = self.value_conv(x).view(B, -1, H*W)  # B, C, HW  
+        
+        attention = torch.matmul(proj_query, proj_key)  # B, HW, HW  
+        attention = attention / math.sqrt(proj_key.size(-1))  
+        attention = attention.softmax(dim=-1)  
+        
+        out = torch.matmul(attention, proj_value).permute(0, 2, 1).view(B, -1, H, W)  
+        out = self.gamma * out + x  
+        return out  
+
+class ChannelAttention(nn.Module):  
+    def __init__(self, dim_in):  
+        super().__init__()  
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)  
+        self.fc = nn.Sequential(  
+            nn.Linear(dim_in, dim_in // 2),  
+            nn.LeakyReLU(0.2),  
+            nn.Linear(dim_in // 2, dim_in),  
+            nn.Sigmoid()  
+        )  
+        
+    def forward(self, x):  
+        B, C, H, W = x.size()  
+        y = self.avg_pool(x).view(B, C)  
+        y = self.fc(y).view(B, C, 1, 1)  
+        return x * y.expand_as(x)  
 
 class ResBlk(nn.Module):
     def __init__(self, dim_in, dim_out, actv=nn.LeakyReLU(0.2),
@@ -19,6 +58,10 @@ class ResBlk(nn.Module):
         self.downsample = downsample
         self.learned_sc = dim_in != dim_out
         self._build_weights(dim_in, dim_out)
+
+        # Add spatial and channel attention  
+        self.spatial_attn = SpatialAttention(dim_in)  
+        self.channel_attn = ChannelAttention(dim_in) 
 
     def _build_weights(self, dim_in, dim_out):
         self.conv1 = nn.Conv2d(dim_in, dim_in, 3, 1, 1)
@@ -47,6 +90,11 @@ class ResBlk(nn.Module):
             x = self.norm2(x)
         x = self.actv(x)
         x = self.conv2(x)
+
+        # Apply attention mechanisms  
+        x = self.spatial_attn(x)  
+        x = self.channel_attn(x)  
+        
         return x
 
     def forward(self, x):
