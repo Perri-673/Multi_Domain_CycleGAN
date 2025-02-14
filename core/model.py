@@ -84,16 +84,17 @@ class ResBlk(nn.Module):
             x = self.norm1(x)
         x = self.actv(x)
         x = self.conv1(x)
+
+        # Apply attention mechanisms  
+        x = self.spatial_attn(x)  
+        x = self.channel_attn(x)  
+
         if self.downsample:
             x = F.avg_pool2d(x, 2)
         if self.normalize:
             x = self.norm2(x)
         x = self.actv(x)
         x = self.conv2(x)
-
-        # Apply attention mechanisms  
-        x = self.spatial_attn(x)  
-        x = self.channel_attn(x)  
         
         return x
 
