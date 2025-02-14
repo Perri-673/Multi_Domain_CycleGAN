@@ -205,6 +205,9 @@ class Generator(nn.Module):
             self.decode.insert(
                 0, AdainResBlk(dim_out, dim_out, style_dim, w_hpf=w_hpf))
 
+        # Add self-attention in the middle of the generator
+        self.self_attn = SpatialAttention(dim_out)
+
         if w_hpf > 0:
             device = torch.device(
                 'cuda' if torch.cuda.is_available() else 'cpu')
@@ -217,6 +220,10 @@ class Generator(nn.Module):
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 cache[x.size(2)] = x
             x = block(x)
+
+        # Apply self-attention in the middle of the generator
+        x = self.self_attn(x)
+
         for block in self.decode:
             x = block(x, s)
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
