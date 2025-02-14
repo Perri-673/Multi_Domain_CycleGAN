@@ -22,13 +22,13 @@ class SpatialAttention(nn.Module):
         B, C, H, W = x.size()  
         proj_query = self.query_conv(x).view(B, -1, H*W).permute(0, 2, 1)  # B, HW, C//4  
         proj_key = self.key_conv(x).view(B, -1, H*W)  # B, C//4, HW  
-        proj_value = self.value_conv(x).view(B, -1, H*W).permute(0, 2, 1)  # B, HW, C//4  # Adjusted dimensions
+        proj_value = self.value_conv(x).view(B, -1, H*W)  # B, C//4, HW  # Adjusted dimensions
         
         attention = torch.matmul(proj_query, proj_key)  # B, HW, HW  
         attention = attention / math.sqrt(proj_key.size(-1))  
         attention = attention.softmax(dim=-1)  
         
-        out = torch.matmul(attention, proj_value).permute(0, 2, 1).view(B, -1, H, W)  
+        out = torch.matmul(attention, proj_value.permute(0, 2, 1)).view(B, -1, H, W)  # Adjusted dimensions
         out = self.gamma * out + x  
         return out  
 
