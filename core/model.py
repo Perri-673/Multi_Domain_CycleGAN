@@ -9,13 +9,25 @@ import torch.nn.functional as F
 
 from core.wing import FAN
 
+class Adapter(nn.Module):
+    def __init__(self, style_dim):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(style_dim, style_dim),
+            nn.ReLU(),
+            nn.Linear(style_dim, style_dim)
+        )
+
+    def forward(self, s):
+        return self.fc(s)
+
 class SpatialAttention(nn.Module):  
     def __init__(self, dim_in, dim_out=None):  
         super().__init__()  
         dim_out = dim_in if dim_out is None else dim_out  
         self.query_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
         self.key_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
-        self.value_conv = nn.Conv2d(dim_in, dim_out, kernel_size=3, padding=1)  # Adjusted dim_out to dim_in  
+        self.value_conv = nn.Conv2d(dim_in, dim_out, kernel_size=3, padding=1)  # Adjusted dim_out  
         self.gamma = nn.Parameter(torch.zeros(1))  
         
     def forward(self, x):  
@@ -284,15 +296,19 @@ class StyleEncoder(nn.Module):
         self.shared = nn.Sequential(*blocks)
 
         self.unshared = nn.ModuleList()
+        self.adapters = nn.ModuleList()  # Add adapters for each domain
         for _ in range(num_domains):
             self.unshared += [nn.Linear(dim_out, style_dim)]
+            self.adapters += [Adapter(style_dim)]  # Add adapter for each domain
 
     def forward(self, x, y):
         h = self.shared(x)
         h = h.view(h.size(0), -1)
         out = []
-        for layer in self.unshared:
-            out += [layer(h)]
+        for layer, adapter in zip(self.unshared, self.adapters):
+            s = layer(h)
+            s = adapter(s)  # Apply the adapter
+            out += [s]
         out = torch.stack(out, dim=1)  # (batch, num_domains, style_dim)
         idx = torch.LongTensor(range(y.size(0))).to(y.device)
         s = out[idx, y]  # (batch, style_dim)
