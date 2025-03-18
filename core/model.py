@@ -9,17 +9,17 @@ import torch.nn.functional as F
 
 from core.wing import FAN
 
-class Adapter(nn.Module):
-    def __init__(self, style_dim):
-        super().__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(style_dim, style_dim),
-            nn.ReLU(),
-            nn.Linear(style_dim, style_dim)
-        )
+# class Adapter(nn.Module):
+#     def __init__(self, style_dim):
+#         super().__init__()
+#         self.fc = nn.Sequential(
+#             nn.Linear(style_dim, style_dim),
+#             nn.ReLU(),
+#             nn.Linear(style_dim, style_dim)
+#         )
 
-    def forward(self, s):
-        return self.fc(s)
+#     def forward(self, s):
+#         return self.fc(s)
 
 class SpatialAttention(nn.Module):  
     def __init__(self, dim_in, dim_out=None):  
@@ -296,18 +296,18 @@ class StyleEncoder(nn.Module):
         self.shared = nn.Sequential(*blocks)
 
         self.unshared = nn.ModuleList()
-        self.adapters = nn.ModuleList()  # Add adapters for each domain
+        #self.adapters = nn.ModuleList()  # Add adapters for each domain
         for _ in range(num_domains):
             self.unshared += [nn.Linear(dim_out, style_dim)]
-            self.adapters += [Adapter(style_dim)]  # Add adapter for each domain
+            #self.adapters += [Adapter(style_dim)]  # Add adapter for each domain
 
     def forward(self, x, y):
         h = self.shared(x)
         h = h.view(h.size(0), -1)
         out = []
-        for layer, adapter in zip(self.unshared, self.adapters):
+        for layer in zip(self.unshared):
             s = layer(h)
-            s = adapter(s)  # Apply the adapter
+            #s = adapter(s)  # Apply the adapter
             out += [s]
         out = torch.stack(out, dim=1)  # (batch, num_domains, style_dim)
         idx = torch.LongTensor(range(y.size(0))).to(y.device)
