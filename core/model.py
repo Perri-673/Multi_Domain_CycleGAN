@@ -296,19 +296,15 @@ class StyleEncoder(nn.Module):
         self.shared = nn.Sequential(*blocks)
 
         self.unshared = nn.ModuleList()
-        #self.adapters = nn.ModuleList()  # Add adapters for each domain
         for _ in range(num_domains):
             self.unshared += [nn.Linear(dim_out, style_dim)]
-            #self.adapters += [Adapter(style_dim)]  # Add adapter for each domain
 
     def forward(self, x, y):
         h = self.shared(x)
         h = h.view(h.size(0), -1)
         out = []
-        for layer in zip(self.unshared):
-            s = layer(h)
-            #s = adapter(s)  # Apply the adapter
-            out += [s]
+        for layer in self.unshared:
+            out += [layer(h)]
         out = torch.stack(out, dim=1)  # (batch, num_domains, style_dim)
         idx = torch.LongTensor(range(y.size(0))).to(y.device)
         s = out[idx, y]  # (batch, style_dim)
