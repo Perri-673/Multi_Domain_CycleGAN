@@ -21,45 +21,45 @@ from core.wing import FAN
 #     def forward(self, s):
 #         return self.fc(s)
 
-class SpatialAttention(nn.Module):  
-    def __init__(self, dim_in, dim_out=None):  
-        super().__init__()  
-        dim_out = dim_in if dim_out is None else dim_out  
-        self.query_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
-        self.key_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
-        self.value_conv = nn.Conv2d(dim_in, dim_out, kernel_size=3, padding=1)  # Adjusted dim_out  
-        self.gamma = nn.Parameter(torch.zeros(1))  
+# class SpatialAttention(nn.Module):  
+#     def __init__(self, dim_in, dim_out=None):  
+#         super().__init__()  
+#         dim_out = dim_in if dim_out is None else dim_out  
+#         self.query_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
+#         self.key_conv = nn.Conv2d(dim_in, dim_out // 4, kernel_size=3, padding=1)  
+#         self.value_conv = nn.Conv2d(dim_in, dim_out, kernel_size=3, padding=1)  # Adjusted dim_out  
+#         self.gamma = nn.Parameter(torch.zeros(1))  
         
-    def forward(self, x):  
-        B, C, H, W = x.size()  
-        proj_query = self.query_conv(x).view(B, -1, H*W).permute(0, 2, 1)  # B, HW, C//4  
-        proj_key = self.key_conv(x).view(B, -1, H*W)  # B, C//4, HW  
-        proj_value = self.value_conv(x).view(B, -1, H*W)  # B, C, HW  # Adjusted dimensions
+#     def forward(self, x):  
+#         B, C, H, W = x.size()  
+#         proj_query = self.query_conv(x).view(B, -1, H*W).permute(0, 2, 1)  # B, HW, C//4  
+#         proj_key = self.key_conv(x).view(B, -1, H*W)  # B, C//4, HW  
+#         proj_value = self.value_conv(x).view(B, -1, H*W)  # B, C, HW  # Adjusted dimensions
         
-        attention = torch.matmul(proj_query, proj_key)  # B, HW, HW  
-        attention = attention / math.sqrt(proj_key.size(-1))  
-        attention = attention.softmax(dim=-1)  
+#         attention = torch.matmul(proj_query, proj_key)  # B, HW, HW  
+#         attention = attention / math.sqrt(proj_key.size(-1))  
+#         attention = attention.softmax(dim=-1)  
         
-        out = torch.matmul(attention, proj_value.permute(0, 2, 1)).view(B, -1, H, W)  # Adjusted dimensions
-        out = self.gamma * out + x  
-        return out  
+#         out = torch.matmul(attention, proj_value.permute(0, 2, 1)).view(B, -1, H, W)  # Adjusted dimensions
+#         out = self.gamma * out + x  
+#         return out  
 
-class ChannelAttention(nn.Module):  
-    def __init__(self, dim_in):  
-        super().__init__()  
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)  
-        self.fc = nn.Sequential(  
-            nn.Linear(dim_in, dim_in // 2),  
-            nn.LeakyReLU(0.2),  
-            nn.Linear(dim_in // 2, dim_in),  
-            nn.Sigmoid()  
-        )  
+# class ChannelAttention(nn.Module):  
+#     def __init__(self, dim_in):  
+#         super().__init__()  
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)  
+#         self.fc = nn.Sequential(  
+#             nn.Linear(dim_in, dim_in // 2),  
+#             nn.LeakyReLU(0.2),  
+#             nn.Linear(dim_in // 2, dim_in),  
+#             nn.Sigmoid()  
+#         )  
         
-    def forward(self, x):  
-        B, C, H, W = x.size()  
-        y = self.avg_pool(x).view(B, C)  
-        y = self.fc(y).view(B, C, 1, 1)  
-        return x * y.expand_as(x)  
+#     def forward(self, x):  
+#         B, C, H, W = x.size()  
+#         y = self.avg_pool(x).view(B, C)  
+#         y = self.fc(y).view(B, C, 1, 1)  
+#         return x * y.expand_as(x)  
 
 class ResBlk(nn.Module):
     def __init__(self, dim_in, dim_out, actv=nn.LeakyReLU(0.2),
@@ -218,7 +218,7 @@ class Generator(nn.Module):
                 0, AdainResBlk(dim_out, dim_out, style_dim, w_hpf=w_hpf))
 
         # Add self-attention in the middle of the generator
-        self.self_attn = SpatialAttention(dim_out)
+        #self.self_attn = SpatialAttention(dim_out)
 
         if w_hpf > 0:
             device = torch.device(
@@ -234,7 +234,7 @@ class Generator(nn.Module):
             x = block(x)
 
         # Apply self-attention in the middle of the generator
-        x = self.self_attn(x)
+        #x = self.self_attn(x)
 
         for block in self.decode:
             x = block(x, s)
